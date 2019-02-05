@@ -52,10 +52,8 @@ def get_hits_on_name(name):
 
     if response is not None:
         html = BeautifulSoup(response, 'html.parser')
-
         hit_link = [a for a in html.select('a')
                     if a['href'].find('latest-60') > -1]
-
         if len(hit_link) > 0:
             # Strip commas
             link_text = hit_link[0].text.replace(',', '')
@@ -85,8 +83,6 @@ def log_error(e):
     make it do anything.
     """
     print(e)
-
-print(get_names())
 
 if __name__ == '__main__':
     print('Getting the list of names....')

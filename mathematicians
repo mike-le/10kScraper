@@ -3,6 +3,7 @@ from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
 
+
 def simple_get(url):
     """
     Attempts to get the content at `url` by making an HTTP GET request.
@@ -49,12 +50,11 @@ def get_report():
 
     if response is not None:
         html = BeautifulSoup(response, 'html.parser')
-        reports = set()
-        for td in html.select('td'):
-            for name in td.text.split('\n'):
-                if len(name) > 0:
-                    reports.add(name.strip())
-        return list(reports)
+        for tr in html.find_all('table'):
+            tds = tr.find_all('td')
+            print("Name: %s, Cognome: %s, Email: %s, test: %s" % \
+            (tds[0].text, tds[1].text, tds[2].text, tds[3]))
+        #return list(reports)
 
     # Raise an exception if we failed to get any data from the url
     log_error('error found for {}'.format(response))

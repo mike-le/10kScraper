@@ -45,15 +45,17 @@ def get_names():
 
 def get_report():
 
-    url = "https://www.microsoft.com/en-us/Investor/sec-filings.aspx"
+    url = "https://www.microsoft.com/en-us/Investor/"
     response = simple_get(url)
 
     if response is not None:
         html = BeautifulSoup(response, 'html.parser')
-        for tr in html.find_all('table'):
-            tds = tr.find_all('td')
-            print("Name: %s, Cognome: %s, Email: %s, test: %s" % \
-            (tds[0].text, tds[1].text, tds[2].text, tds[3]))
+        for p in html.find_all('p'):
+            for text in p.text.split('\n'):
+                if len(text) > 0:
+                    print(text)
+            #tds = tr.find_all('td')
+            #print("Name: %s, Cognome: %s, Email: %s" % (tds[0].text, tds[1].text, tds[2].text))
         #return list(reports)
 
     # Raise an exception if we failed to get any data from the url

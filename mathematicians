@@ -54,13 +54,11 @@ def get_report():
             for text in p.text.split('\n'):
                 if len(text) > 0:
                     print(text)
-            #tds = tr.find_all('td')
-            #print("Name: %s, Cognome: %s, Email: %s" % (tds[0].text, tds[1].text, tds[2].text))
-        #return list(reports)
 
     # Raise an exception if we failed to get any data from the url
     log_error('error found for {}'.format(response))
     raise Exception('Error retrieving contents at {}'.format(url))
+
 
 def is_good_response(resp):
     content_type = resp.headers['Content-Type'].lower()

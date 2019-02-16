@@ -2,6 +2,8 @@ from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
+import urllib3
+import requests
 
 
 def simple_get(url):
@@ -44,20 +46,35 @@ def get_names():
 
 
 def get_report():
-
-    url = "https://www.microsoft.com/en-us/Investor/"
-    response = simple_get(url)
+    urls = {}
+    names = {}
+    _URL = "https://investor.apple.com/investor-relations/sec-filings/default.aspx"
+    r = requests.get(_URL)
+    response = BeautifulSoup(r.text)
+    #response = simple_get(_URL)
 
     if response is not None:
-        html = BeautifulSoup(response, 'html.parser')
-        for p in html.find_all('p'):
-            for text in p.text.split('\n'):
-                if len(text) > 0:
-                    print(text)
+        #html = BeautifulSoup(response, 'html.parser')
+        #for li in html.find_all('li'):
+            #for a in html.find_all('a', href=True):
+        for i, link in enumerate(response.findAll('a')):
+            _FULLURL = _URL + link.get('href')
+            if _FULLURL.endswith('.pdf'):
+                urls.append(_FULLURL)
+                names.append(response.select('a')[i].attrs['href'])
+        names_urls = zip(names, urls)
 
-    # Raise an exception if we failed to get any data from the url
-    log_error('error found for {}'.format(response))
-    raise Exception('Error retrieving contents at {}'.format(url))
+        for name, url in names_urls:
+            print(url)
+            rq = urllib3.Request(url)
+            res = urllib3.urlopen(rq)
+            pdf = open("pdfs/" + name, 'wb')
+            pdf.write(res.read())
+            pdf.close()
+    else:
+        # Raise an exception if we failed to get any data from the url
+        log_error('error found for {}'.format(response))
+        raise Exception('Error retrieving contents at {}'.format(_URL))
 
 
 def is_good_response(resp):

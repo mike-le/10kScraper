@@ -50,15 +50,30 @@ def get_report():
     names = {}
     _URL = "https://investor.apple.com/investor-relations/sec-filings/default.aspx"
     r = requests.get(_URL)
-    response = BeautifulSoup(r.text)
+    response = BeautifulSoup(r.content, 'lxml')
     #response = simple_get(_URL)
 
     if response is not None:
         #html = BeautifulSoup(response, 'html.parser')
         #for li in html.find_all('li'):
             #for a in html.find_all('a', href=True):
+
+        #print and receive viewstate from aspx
+        viewstate = response.findAll("input", {"type": "hidden", "name": "__VIEWSTATE"})
+        eventvalidation = response.findAll("input", {"type": "hidden", "name": "__EVENTVALIDATION"})
+
+        print(viewstate[0]['value'])
+        formData = (
+            ('__EVENTVALIDATION', eventvalidation),
+            ('__VIEWSTATE', viewstate),
+            ('__VIEWSTATEENCRYPTED', ''),
+            ('TextBox1', '106110006'),
+            ('Button1', 'Show'),
+        )
+        
         for i, link in enumerate(response.findAll('a')):
-            _FULLURL = _URL + link.get('href')
+            _FULLURL = str(link.get('href'))
+            print(_FULLURL)
             if _FULLURL.endswith('.pdf'):
                 urls.append(_FULLURL)
                 names.append(response.select('a')[i].attrs['href'])

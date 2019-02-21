@@ -4,7 +4,7 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 import urllib3
 import requests
-from lxml import html
+
 
 
 def simple_get(url):
@@ -47,35 +47,38 @@ def get_names():
 
 
 def get_report():
+    """
+    Downloads the PDFs from the given url
+    """
     urls = {}
     names = {}
-    _URL = "https://investor.apple.com/investor-relations/sec-filings/default.aspx"
-    r = requests.get(_URL)
-    response = BeautifulSoup(r.text, 'html.parser')
-    #response = simple_get(_URL)
+    _URL = "https://ir.aboutamazon.com/sec-filings?field_nir_sec_form_group_target_id%5B%5D=471&field_nir_sec_date_filed_value=&items_per_page=10"
+    response = simple_get(_URL)
 
     if response is not None:
-        #html = BeautifulSoup(response, 'html.parser')
+        response = BeautifulSoup(response, 'html.parser')
         #for li in html.find_all('li'):
             #for a in html.find_all('a', href=True):
 
         #print and receive viewstate from aspx
-        viewstate = response.findAll("input", {"type": "hidden", "name": "__VIEWSTATE"})
-        eventvalidation = response.findAll("input", {"type": "hidden", "name": "__EVENTVALIDATION"})
-
-        print(viewstate[0]['value'])
-        formData = (
-            ('__EVENTVALIDATION', eventvalidation),
-            ('__VIEWSTATE', viewstate),
-            ('__VIEWSTATEENCRYPTED', ''),
-            ('TextBox1', '106110006'),
-            ('Button1', 'Show'),
-        )
+        # viewstate = response.findAll("input", {"type": "hidden", "name": "__VIEWSTATE"})
+        # eventvalidation = response.findAll("input", {"type": "hidden", "name": "__EVENTVALIDATION"})
+        #
+        # print(viewstate[0]['value'])
+        # formData = (
+        #     ('__EVENTVALIDATION', eventvalidation),
+        #     ('__VIEWSTATE', viewstate),
+        #     ('__VIEWSTATEENCRYPTED', ''),
+        #     ('TextBox1', '106110006'),
+        #     ('Button1', 'Show'),
+        # )
         
         for i, link in enumerate(response.findAll('a')):
             _FULLURL = str(link.get('href'))
-            print(_FULLURL)
-            if _FULLURL.endswith('.pdf'):
+            type = str(link.get('type'))
+            #print(_FULLURL)
+            if type.endswith('pdf'):
+                print("here")
                 urls.append(_FULLURL)
                 names.append(response.select('a')[i].attrs['href'])
         names_urls = zip(names, urls)
@@ -93,16 +96,6 @@ def get_report():
         raise Exception('Error retrieving contents at {}'.format(_URL))
 
 
-def test():
-    url = 'https://www.electroimpact.com/Company/Patents.aspx'
-    source = urllib3.urlopen(url).read()
-    document = html.fromstring(source)
-    patent_paths = [
-        a.attrib['href'] for a in document.cssselect('div.PatentNumber a')
-    ]
-    print(patent_paths)
-
-
 def is_good_response(resp):
     content_type = resp.headers['Content-Type'].lower()
     return (resp.status_code == 200
@@ -114,7 +107,7 @@ def log_error(e):
     print(e)
 
 
-#get_report()
-test()
+get_report()
+
 
 

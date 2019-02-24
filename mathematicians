@@ -50,35 +50,20 @@ def get_report():
     """
     Downloads the PDFs from the given url
     """
-    urls = {}
-    names = {}
+    urls = []
+    names = []
     _URL = "https://ir.aboutamazon.com/sec-filings?field_nir_sec_form_group_target_id%5B%5D=471&field_nir_sec_date_filed_value=&items_per_page=10"
     response = simple_get(_URL)
 
     if response is not None:
         response = BeautifulSoup(response, 'html.parser')
-        #for li in html.find_all('li'):
-            #for a in html.find_all('a', href=True):
-
-        #print and receive viewstate from aspx
-        # viewstate = response.findAll("input", {"type": "hidden", "name": "__VIEWSTATE"})
-        # eventvalidation = response.findAll("input", {"type": "hidden", "name": "__EVENTVALIDATION"})
-        #
-        # print(viewstate[0]['value'])
-        # formData = (
-        #     ('__EVENTVALIDATION', eventvalidation),
-        #     ('__VIEWSTATE', viewstate),
-        #     ('__VIEWSTATEENCRYPTED', ''),
-        #     ('TextBox1', '106110006'),
-        #     ('Button1', 'Show'),
-        # )
         
         for i, link in enumerate(response.findAll('a')):
             _FULLURL = str(link.get('href'))
-            type = str(link.get('type'))
-            #print(_FULLURL)
-            if type.endswith('pdf'):
-                print("here")
+            _TYPE = str(link.get('type'))
+            # print(_FULLURL)
+            # print(_TYPE)
+            if 'pdf' in _TYPE:
                 urls.append(_FULLURL)
                 names.append(response.select('a')[i].attrs['href'])
         names_urls = zip(names, urls)

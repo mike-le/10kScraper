@@ -2,8 +2,8 @@ from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
-import urllib3
-import requests
+import urllib
+from urllib import request
 
 
 
@@ -70,10 +70,9 @@ def get_report():
 
         for name, url in names_urls:
             print(url)
-            rq = urllib3.Request(url)
-            res = urllib3.urlopen(rq)
-            pdf = open("pdfs/" + name, 'wb')
-            pdf.write(res.read())
+            rq = urllib.request.urlopen(url)
+            pdf = open("/pdfs", 'wb')
+            pdf.write(rq.read())
             pdf.close()
     else:
         # Raise an exception if we failed to get any data from the url

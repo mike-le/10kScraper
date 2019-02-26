@@ -71,9 +71,8 @@ def get_report():
         for name, url in names_urls:
             print(url)
             rq = urllib.request.urlopen(url)
-            pdf = open("/pdfs", 'wb')
-            pdf.write(rq.read())
-            pdf.close()
+            with open('/pdfs', 'wb') as f:
+                f.write(rq.content)
     else:
         # Raise an exception if we failed to get any data from the url
         log_error('error found for {}'.format(response))

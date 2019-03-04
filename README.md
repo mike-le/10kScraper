@@ -8,5 +8,5 @@ StockDropScraper is a Python application that automatically pulls SEC filings fr
 The goal of the application was to provide an automated tool to provide historical datasets for StockDrop.
   
 ## Technologies
-Python3
+Python3  
 BeautifulSoup   

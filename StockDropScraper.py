@@ -6,7 +6,6 @@ import urllib
 from urllib import request
 
 
-
 def simple_get(url):
     """
     Attempts to get the content at `url` by making an HTTP GET request.
@@ -61,8 +60,6 @@ def get_report():
         for i, link in enumerate(response.findAll('a')):
             _FULLURL = str(link.get('href'))
             _TYPE = str(link.get('type'))
-            # print(_FULLURL)
-            # print(_TYPE)
             if 'pdf' in _TYPE:
                 urls.append(_FULLURL)
                 names.append(response.select('a')[i].attrs['href'])
@@ -72,7 +69,7 @@ def get_report():
             print(url)
             rq = urllib.request.urlopen(url)
             with open('/pdfs', 'wb') as f:
-                f.write(rq.content)
+                f.write(rq.read())
     else:
         # Raise an exception if we failed to get any data from the url
         log_error('error found for {}'.format(response))

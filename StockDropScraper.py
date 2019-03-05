@@ -24,27 +24,6 @@ def simple_get(url):
         return None
 
 
-def get_names():
-    """
-    Downloads the page where the list of mathematicians is found
-    and returns a list of strings, one per mathematician
-    """
-    url = 'http://www.fabpedigree.com/james/mathmen.htm'
-    response = simple_get(url)
-
-    if response is not None:
-        html = BeautifulSoup(response, 'html.parser')
-        names = set()
-        for li in html.select('li'):
-            for name in li.text.split('\n'):
-                if len(name) > 0:
-                    names.add(name.strip())
-        return list(names)
-
-    # Raise an exception if we failed to get any data from the url
-    raise Exception('Error retrieving contents at {}'.format(url))
-
-
 def get_report():
     """
     Downloads the PDFs from the given url
@@ -66,7 +45,6 @@ def get_report():
         names_urls = zip(names, urls)
 
         for name, url in names_urls:
-            print(url)
             rq = urllib.request.urlopen(url)
             with open('/pdfs', 'wb') as f:
                 f.write(rq.read())

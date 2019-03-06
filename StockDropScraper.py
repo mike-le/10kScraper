@@ -46,8 +46,11 @@ def get_report():
 
         for name, url in names_urls:
             rq = urllib.request.urlopen(url)
-            with open('/pdfs', 'wb') as f:
-                f.write(rq.read())
+            header = rq.info()
+            if 'Content-Disposition' in str(header):
+                filename = rq.info()['Content-Disposition'].split('=')[-1].strip('"')
+                with open(filename, 'wb') as f:
+                    f.write(rq.read())
     else:
         # Raise an exception if we failed to get any data from the url
         log_error('error found for {}'.format(response))

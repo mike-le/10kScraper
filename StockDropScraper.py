@@ -49,6 +49,7 @@ def get_report():
             header = rq.info()
             if 'Content-Disposition' in str(header):
                 filename = rq.info()['Content-Disposition'].split('=')[-1].strip('"')
+                print(filename)
                 with open(filename, 'wb') as f:
                     f.write(rq.read())
     else:

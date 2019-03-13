@@ -32,7 +32,7 @@ def get_report():
     names = []
     #_URL = "https://ir.aboutamazon.com/sec-filings?field_nir_sec_form_group_target_id%5B%5D=471&field_nir_sec_date_filed_value=&items_per_page=10"
     _DOMAIN = "https://abc.xyz/"
-    _URL = _DOMAIN + "investor/"
+    _URL = _DOMAIN + "investor"
     response = simple_get(_URL)
 
     if response is not None:
@@ -43,16 +43,18 @@ def get_report():
             _TYPE = str(link.get('type'))
             if 'pdf' in _TYPE or '.pdf' in _FULLURL:
                 urls.append(_DOMAIN + _FULLURL)
-                names.append(response.select('a')[i].attrs['href'])
+                name = response.select('a')[i].attrs['href'].replace('/', '_')
+                if not name.endsWith('.pdf'):
+                    name = name + '.pdf'
+                names.append(name)
         names_urls = zip(names, urls)
 
         for name, url in names_urls:
             try:
                 rq = urllib.request.urlopen(url)
                 header = rq.info()
-                if 'Content-Disposition' in str(header):
-                    filename = rq.info()['Content-Disposition'].split('=')[-1].strip('"')
-                    with open(filename, 'wb') as f:
+                if 'Content-Disposition' in str(header) or 'application/pdf' in str(header):
+                    with open(name, 'wb') as f:
                         f.write(rq.read())
             except RequestException as e:
                 log_error('Error during requests to {0} : {1}'.format(_URL, str(e)))

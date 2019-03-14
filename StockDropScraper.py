@@ -41,7 +41,7 @@ def get_report():
         for i, link in enumerate(response.findAll('a')):
             _FULLURL = str(link.get('href'))
             _TYPE = str(link.get('type'))
-            if 'pdf' in _TYPE or '.pdf' in _FULLURL:
+            if ('pdf' in _TYPE or '.pdf' in _FULLURL) and '10K' in _FULLURL:
                 urls.append(_DOMAIN + _FULLURL)
                 name = response.select('a')[i].attrs['href'].replace('/', '_')
                 if not name.endsWith('.pdf'):
@@ -49,6 +49,7 @@ def get_report():
                 names.append(name)
         names_urls = zip(names, urls)
 
+        numberOfFiles = 0
         for name, url in names_urls:
             try:
                 rq = urllib.request.urlopen(url)
@@ -56,8 +57,10 @@ def get_report():
                 if 'Content-Disposition' in str(header) or 'application/pdf' in str(header):
                     with open(name, 'wb') as f:
                         f.write(rq.read())
+                        numberOfFiles += 1
             except RequestException as e:
                 log_error('Error during requests to {0} : {1}'.format(_URL, str(e)))
+        print('Number of files copied over: ' + numberOfFiles)
     else:
         # Raise an exception if we failed to get any data from the url
         log_error('error found for {}'.format(response))

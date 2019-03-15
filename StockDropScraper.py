@@ -44,7 +44,7 @@ def get_report():
             if ('pdf' in _TYPE or '.pdf' in _FULLURL) and '10K' in _FULLURL:
                 urls.append(_DOMAIN + _FULLURL)
                 name = response.select('a')[i].attrs['href'].replace('/', '_')
-                if not name.endsWith('.pdf'):
+                if not name.endswith('.pdf'):
                     name = name + '.pdf'
                 names.append(name)
         names_urls = zip(names, urls)
@@ -60,7 +60,7 @@ def get_report():
                         numberOfFiles += 1
             except RequestException as e:
                 log_error('Error during requests to {0} : {1}'.format(_URL, str(e)))
-        print('Number of files copied over: ' + numberOfFiles)
+        print('Number of files copied over: ' + str(numberOfFiles))
     else:
         # Raise an exception if we failed to get any data from the url
         log_error('error found for {}'.format(response))

@@ -2,3 +2,5 @@
 
 # compiled output
 /.idea
+/pdfs
+/venv

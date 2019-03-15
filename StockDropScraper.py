@@ -55,7 +55,7 @@ def get_report():
                 rq = urllib.request.urlopen(url)
                 header = rq.info()
                 if 'Content-Disposition' in str(header) or 'application/pdf' in str(header):
-                    with open(name, 'wb') as f:
+                    with open('pdfs/'+name, 'wb') as f:
                         f.write(rq.read())
                         numberOfFiles += 1
             except RequestException as e:

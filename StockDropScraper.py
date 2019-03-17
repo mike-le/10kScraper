@@ -4,7 +4,9 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 import urllib
 from urllib import request
+import os
 
+_DIRECTORY = "pdfs/"
 
 def simple_get(url):
     """
@@ -31,6 +33,7 @@ def get_report():
     urls = []
     names = []
     #_URL = "https://ir.aboutamazon.com/sec-filings?field_nir_sec_form_group_target_id%5B%5D=471&field_nir_sec_date_filed_value=&items_per_page=10"
+    _TICKER = "GOOGL"
     _DOMAIN = "https://abc.xyz/"
     _URL = _DOMAIN + "investor"
     response = simple_get(_URL)
@@ -49,13 +52,18 @@ def get_report():
                 names.append(name)
         names_urls = zip(names, urls)
 
+        # Create target folder if it does not exist
+        TARGET_PATH = _DIRECTORY + _TICKER
+        if not os.path.exists(TARGET_PATH):
+            os.makedirs(TARGET_PATH)
+
         numberOfFiles = 0
         for name, url in names_urls:
             try:
                 rq = urllib.request.urlopen(url)
                 header = rq.info()
                 if 'Content-Disposition' in str(header) or 'application/pdf' in str(header):
-                    with open('pdfs/'+name, 'wb') as f:
+                    with open(TARGET_PATH+'/'+name, 'wb') as f:
                         f.write(rq.read())
                         numberOfFiles += 1
             except RequestException as e:

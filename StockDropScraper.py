@@ -4,9 +4,47 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 import urllib
 from urllib import request
+import PyPDF2
 import os
+import io
 
 _DIRECTORY = "pdfs/"
+
+
+class PDF:
+    def __init__(self, source):
+        self.source = source
+
+    def is_10K(self):
+        try:
+            pdfReader = PyPDF2.PdfFileReader(io.BytesIO(self.source))
+            pageObj = pdfReader.getPage(0)
+            text = str(pageObj.extractText())
+            if '10-K' in text:
+                return True
+            else:
+                return False
+
+        except FileNotFoundError as e:
+            log_error('Error while reading from PDF object {0}'.format(self.source, str(e)))
+            return None
+
+    def getYear(self):
+        try:
+            pdfReader = PyPDF2.PdfFileReader(io.BytesIO(self.source))
+            pageObj = pdfReader.getPage(0)
+            text = str(pageObj.extractText()).split('ORTRANSITION')[0]
+            numbers = [int(text) for text in text.split() if text.isdigit()]
+            print(text)
+            if len(numbers) > 0:
+                return numbers[len(numbers)-1]
+            else:
+                return -1
+
+        except FileNotFoundError as e:
+            log_error('Error while reading from PDF object {0}'.format(self.source, str(e)))
+            return None
+
 
 def simple_get(url):
     """
@@ -32,7 +70,7 @@ def get_report():
     """
     urls = []
     names = []
-    #_URL = "https://ir.aboutamazon.com/sec-filings?field_nir_sec_form_group_target_id%5B%5D=471&field_nir_sec_date_filed_value=&items_per_page=10"
+    #_DOMAIN = "https://ir.aboutamazon.com/sec-filings?field_nir_sec_form_group_target_id%5B%5D=471&field_nir_sec_date_filed_value=&items_per_page=10"
     _TICKER = "GOOGL"
     _DOMAIN = "https://abc.xyz/"
     _URL = _DOMAIN + "investor"
@@ -44,7 +82,7 @@ def get_report():
         for i, link in enumerate(response.findAll('a')):
             _FULLURL = str(link.get('href'))
             _TYPE = str(link.get('type'))
-            if ('pdf' in _TYPE or '.pdf' in _FULLURL) and '10K' in _FULLURL:
+            if 'pdf' in _TYPE or '.pdf' in _FULLURL:
                 urls.append(_DOMAIN + _FULLURL)
                 name = response.select('a')[i].attrs['href'].replace('/', '_')
                 if not name.endswith('.pdf'):
@@ -54,8 +92,7 @@ def get_report():
 
         # Create target folder if it does not exist
         TARGET_PATH = _DIRECTORY + _TICKER
-        if not os.path.exists(TARGET_PATH):
-            os.makedirs(TARGET_PATH)
+        createDirectory(TARGET_PATH)
 
         numberOfFiles = 0
         for name, url in names_urls:
@@ -63,9 +100,13 @@ def get_report():
                 rq = urllib.request.urlopen(url)
                 header = rq.info()
                 if 'Content-Disposition' in str(header) or 'application/pdf' in str(header):
-                    with open(TARGET_PATH+'/'+name, 'wb') as f:
-                        f.write(rq.read())
-                        numberOfFiles += 1
+                    pdf = PDF(rq.read())
+                    if PDF.is_10K(pdf):
+                        year = str(PDF.getYear(pdf) if PDF.getYear(pdf) > 0 else 'etc')
+                        createDirectory(TARGET_PATH+'/'+year)
+                        with open(TARGET_PATH+'/'+year+'/'+name, 'wb') as f:
+                            f.write(rq.read())
+                            numberOfFiles += 1
             except RequestException as e:
                 log_error('Error during requests to {0} : {1}'.format(_URL, str(e)))
         print('Number of files copied over: ' + str(numberOfFiles))
@@ -80,6 +121,11 @@ def is_good_response(resp):
     return (resp.status_code == 200
             and content_type is not None
             and content_type.find('html') > -1)
+
+
+def createDirectory(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
 
 
 def log_error(e):

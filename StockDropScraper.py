@@ -7,7 +7,6 @@ from urllib import error
 from PyPDF2 import utils
 from PyPDF2 import PdfFileReader
 import urllib
-import PyPDF2
 import os
 import io
 import time
@@ -25,13 +24,14 @@ class PDF:
             pdfReader = PdfFileReader(io.BytesIO(self.source))
             if pdfReader.isEncrypted:
                 pdfReader = PDF.decrypt(self, pdfReader, self.name)
-            pageObj = pdfReader.getPage(0)
-            text = str(pageObj.extractText())
-            print(text)
-            if '10-K' in text:
-                return True
-            else:
-                return False
+            for i in range(0, pdfReader.getNumPages()):
+                pageObj = pdfReader.getPage(i)
+                text = str(pageObj.extractText())
+                if 'SECURITIES AND EXCHANGE COMMISSION' in text:
+                    if '10-K' in text:
+                        return True
+                    else:
+                        return False
 
         except utils.PdfReadError as e:
             log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
@@ -42,13 +42,16 @@ class PDF:
             pdfReader = PdfFileReader(io.BytesIO(self.source))
             if pdfReader.isEncrypted:
                 pdfReader = PDF.decrypt(self, pdfReader, self.name)
-            pageObj = pdfReader.getPage(0)
-            text = str(pageObj.extractText()).split('ORTRANSITION')[0]
-            numbers = [int(text) for text in text.split() if text.isdigit()]
-            if len(numbers) > 0:
-                return numbers[len(numbers)-1]
-            else:
-                return -1
+            for i in range(0, pdfReader.getNumPages()):
+                pageObj = pdfReader.getPage(i)
+                text = str(pageObj.extractText())
+                if 'SECURITIES AND EXCHANGE COMMISSION' in text:
+                    text = str(pageObj.extractText()).split('ORTRANSITION')[0]
+                    numbers = [int(text) for text in text.split() if text.isdigit()]
+                    if len(numbers) > 0:
+                        return numbers[len(numbers)-1]
+                    else:
+                        return -1
 
         except utils.PdfReadError as e:
             log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))

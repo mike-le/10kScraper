@@ -30,7 +30,7 @@ class PDF:
             log_error('Error while reading from PDF object {0}'.format(self.source, str(e)))
             return None
 
-    def getYear(self):
+    def get_year(self):
         try:
             pdfReader = PyPDF2.PdfFileReader(io.BytesIO(self.source))
             pageObj = pdfReader.getPage(0)
@@ -92,7 +92,7 @@ def get_report():
 
         # Create target folder if it does not exist
         TARGET_PATH = _DIRECTORY + _TICKER
-        createDirectory(TARGET_PATH)
+        create_directory(TARGET_PATH)
 
         numberOfFiles = 0
         for name, url in names_urls:
@@ -102,8 +102,8 @@ def get_report():
                 if 'Content-Disposition' in str(header) or 'application/pdf' in str(header):
                     pdf = PDF(rq.read())
                     if PDF.is_10K(pdf):
-                        year = str(PDF.getYear(pdf) if PDF.getYear(pdf) > 0 else 'etc')
-                        createDirectory(TARGET_PATH+'/'+year)
+                        year = str(PDF.get_year(pdf) if PDF.get_year(pdf) > 0 else 'etc')
+                        create_directory(TARGET_PATH+'/'+year)
                         with open(TARGET_PATH+'/'+year+'/'+name, 'wb') as f:
                             f.write(rq.read())
                             numberOfFiles += 1
@@ -125,7 +125,7 @@ def is_good_response(resp):
             and content_type.find('html') > -1)
 
 
-def createDirectory(dir):
+def create_directory(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
 

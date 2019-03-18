@@ -2,8 +2,9 @@ from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
-import urllib
 from urllib import request
+from urllib import error
+import urllib
 import PyPDF2
 import os
 import io
@@ -70,9 +71,9 @@ def get_report():
     """
     urls = []
     names = []
-    _TICKER = "GOOGL"
-    _DOMAIN = "https://abc.xyz/"
-    _URL = _DOMAIN + "investor"
+    _TICKER = "DIS"
+    _DOMAIN = "https://www.thewaltdisneycompany.com/investor-relations/"
+    _URL = _DOMAIN #+ "investor"
     response = simple_get(_URL)
     start = time.time()
 
@@ -107,8 +108,11 @@ def get_report():
                         with open(TARGET_PATH+'/'+year+'/'+name, 'wb') as f:
                             f.write(rq.read())
                             numberOfFiles += 1
-            except RequestException as e:
-                log_error('Error during requests to {0} : {1}'.format(_URL, str(e)))
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    log_error('File not found during requests to {0} : {1}'.format(_URL, str(e)))
+                else:
+                    raise
         end = time.time()
         print('Execution Time: ' + str(round(end - start, 2)) + ' seconds')
         print('Number of files copied over: ' + str(numberOfFiles))

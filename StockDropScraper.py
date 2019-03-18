@@ -4,6 +4,8 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 from urllib import request
 from urllib import error
+from PyPDF2 import utils
+from PyPDF2 import PdfFileReader
 import urllib
 import PyPDF2
 import os
@@ -14,26 +16,32 @@ _DIRECTORY = "pdfs/"
 
 
 class PDF:
-    def __init__(self, source):
+    def __init__(self, source, name):
         self.source = source
+        self.name = name
 
     def is_10K(self):
         try:
-            pdfReader = PyPDF2.PdfFileReader(io.BytesIO(self.source))
+            pdfReader = PdfFileReader(io.BytesIO(self.source))
+            if pdfReader.isEncrypted:
+                pdfReader = PDF.decrypt(self, pdfReader, self.name)
             pageObj = pdfReader.getPage(0)
             text = str(pageObj.extractText())
+            print(text)
             if '10-K' in text:
                 return True
             else:
                 return False
 
-        except FileNotFoundError as e:
-            log_error('Error while reading from PDF object {0}'.format(self.source, str(e)))
+        except utils.PdfReadError as e:
+            log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
             return None
 
     def get_year(self):
         try:
-            pdfReader = PyPDF2.PdfFileReader(io.BytesIO(self.source))
+            pdfReader = PdfFileReader(io.BytesIO(self.source))
+            if pdfReader.isEncrypted:
+                pdfReader = PDF.decrypt(self, pdfReader, self.name)
             pageObj = pdfReader.getPage(0)
             text = str(pageObj.extractText()).split('ORTRANSITION')[0]
             numbers = [int(text) for text in text.split() if text.isdigit()]
@@ -42,9 +50,22 @@ class PDF:
             else:
                 return -1
 
-        except FileNotFoundError as e:
-            log_error('Error while reading from PDF object {0}'.format(self.source, str(e)))
+        except utils.PdfReadError as e:
+            log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
             return None
+
+    def decrypt(self, pdfReader, name):
+        try:
+            pdfReader.decrypt('')
+            print('File Decrypted (PyPDF2)')
+        except NotImplementedError as e:
+            command = ("cp " + name +
+                       " temp.pdf; qpdf --password='' --decrypt temp.pdf " + name
+                       + "; rm temp.pdf")
+            os.system(command)
+            print('File Decrypted (qpdf)')
+            fp = open(name)
+            return PdfFileReader(fp)
 
 
 def simple_get(url):
@@ -84,7 +105,9 @@ def get_report():
             _FULLURL = str(link.get('href'))
             _TYPE = str(link.get('type'))
             if 'pdf' in _TYPE or '.pdf' in _FULLURL:
-                urls.append(_DOMAIN + _FULLURL)
+                if not str(_FULLURL).startswith('http'):
+                    _FULLURL = _DOMAIN + _FULLURL
+                urls.append(_FULLURL)
                 name = response.select('a')[i].attrs['href'].replace('/', '_')
                 if not name.endswith('.pdf'):
                     name = name + '.pdf'
@@ -101,7 +124,7 @@ def get_report():
                 rq = urllib.request.urlopen(url)
                 header = rq.info()
                 if 'Content-Disposition' in str(header) or 'application/pdf' in str(header):
-                    pdf = PDF(rq.read())
+                    pdf = PDF(rq.read(), name)
                     if PDF.is_10K(pdf):
                         year = str(PDF.get_year(pdf) if PDF.get_year(pdf) > 0 else 'etc')
                         create_directory(TARGET_PATH+'/'+year)

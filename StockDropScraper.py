@@ -6,6 +6,7 @@ from urllib import request
 from urllib import error
 from PyPDF2 import utils
 from PyPDF2 import PdfFileReader
+from PyPDF2 import PdfFileWriter
 import urllib
 import os
 import io
@@ -24,6 +25,8 @@ class PDF:
             pdfReader = PdfFileReader(io.BytesIO(self.source))
             if pdfReader.isEncrypted:
                 pdfReader = PDF.decrypt(self, pdfReader, self.name)
+            if pdfReader is None:
+                return False
             for i in range(0, pdfReader.getNumPages()):
                 pageObj = pdfReader.getPage(i)
                 text = str(pageObj.extractText())
@@ -42,13 +45,15 @@ class PDF:
             pdfReader = PdfFileReader(io.BytesIO(self.source))
             if pdfReader.isEncrypted:
                 pdfReader = PDF.decrypt(self, pdfReader, self.name)
+            if pdfReader is None:
+                return False
             for i in range(0, pdfReader.getNumPages()):
                 pageObj = pdfReader.getPage(i)
                 text = str(pageObj.extractText())
                 if 'SECURITIES AND EXCHANGE COMMISSION' in text:
                     text = str(pageObj.extractText()).split('ORTRANSITION')[0]
                     numbers = [int(text) for text in text.split() if text.isdigit()]
-                    if len(numbers) > 0:
+                    if len(numbers) > 0 and numbers[len(numbers)-1] > 1000:
                         return numbers[len(numbers)-1]
                     else:
                         return -1
@@ -57,18 +62,32 @@ class PDF:
             log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
             return None
 
+    def save(self, path):
+        pdfReader = PdfFileReader(io.BytesIO(self.source))
+        pdfWriter = PdfFileWriter()
+        if pdfReader.isEncrypted:
+                pdfReader = PDF.decrypt(self, pdfReader, self.name)
+        if pdfReader is not None:
+            newFile = open(path + self.name, 'wb')
+            pdfWriter.write(newFile)
+            newFile.close()
+
     def decrypt(self, pdfReader, name):
-        try:
-            pdfReader.decrypt('')
-            print('File Decrypted (PyPDF2)')
-        except NotImplementedError as e:
-            command = ("cp " + name +
-                       " temp.pdf; qpdf --password='' --decrypt temp.pdf " + name
-                       + "; rm temp.pdf")
-            os.system(command)
-            print('File Decrypted (qpdf)')
-            fp = open(name)
-            return PdfFileReader(fp)
+            try:
+                pdfReader.decrypt('')
+                print('File Decrypted (PyPDF2)')
+            except NotImplementedError as e:
+                command = ("cp " + name +
+                           " temp.pdf; qpdf --password='' --decrypt temp.pdf " + name
+                           + "; rm temp.pdf")
+                os.system(command)
+                print('File Decrypted (qpdf)')
+                try:
+                    fp = open(name)
+                    return PdfFileReader(fp)
+                except FileNotFoundError as e:
+                    log_error('Error while reading from file {0}: {1}'.format(self.name, str(e)))
+                    return None
 
 
 def simple_get(url):
@@ -103,7 +122,7 @@ def get_report():
 
     if response is not None:
         response = BeautifulSoup(response, 'html.parser')
-        
+
         for i, link in enumerate(response.findAll('a')):
             _FULLURL = str(link.get('href'))
             _TYPE = str(link.get('type'))
@@ -111,7 +130,7 @@ def get_report():
                 if not str(_FULLURL).startswith('http'):
                     _FULLURL = _DOMAIN + _FULLURL
                 urls.append(_FULLURL)
-                name = response.select('a')[i].attrs['href'].replace('/', '_')
+                name = response.select('a')[i].attrs['href'].replace('/', '_').split('.com')[1]
                 if not name.endswith('.pdf'):
                     name = name + '.pdf'
                 names.append(name)
@@ -130,10 +149,13 @@ def get_report():
                     pdf = PDF(rq.read(), name)
                     if PDF.is_10K(pdf):
                         year = str(PDF.get_year(pdf) if PDF.get_year(pdf) > 0 else 'etc')
-                        create_directory(TARGET_PATH+'/'+year)
-                        with open(TARGET_PATH+'/'+year+'/'+name, 'wb') as f:
-                            f.write(rq.read())
-                            numberOfFiles += 1
+                        path = TARGET_PATH + '/' + year + '/'
+                        create_directory(path)
+                        pdf.save(path)
+                        numberOfFiles += 1
+                        #with open(TARGET_PATH+'/'+year+'/'+name, 'wb') as f:
+                         #   f.write(rq.read())
+                          #  numberOfFiles += 1
             except urllib.error.HTTPError as e:
                 if e.code == 404:
                     log_error('File not found during requests to {0} : {1}'.format(_URL, str(e)))

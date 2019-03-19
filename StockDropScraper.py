@@ -2,11 +2,8 @@ from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
-from urllib import request
-from urllib import error
-from PyPDF2 import utils
-from PyPDF2 import PdfFileReader
-from PyPDF2 import PdfFileWriter
+from urllib import request, error
+from PyPDF2 import utils, PdfFileWriter, PdfFileReader
 import urllib
 import os
 import io

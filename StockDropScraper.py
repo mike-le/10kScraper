@@ -7,6 +7,7 @@ from PyPDF2 import utils, PdfFileReader
 import urllib
 import os
 import io
+import re
 import time
 
 _DIRECTORY = "pdfs/"
@@ -43,15 +44,15 @@ class PDF:
             if pdfReader.isEncrypted:
                 pdfReader = PDF.decrypt(self, pdfReader, self.name)
             if pdfReader is None:
-                return False
+                return -1
             for i in range(0, pdfReader.getNumPages()):
                 pageObj = pdfReader.getPage(i)
                 text = str(pageObj.extractText())
                 if 'SECURITIES AND EXCHANGE COMMISSION' in text:
                     text = str(pageObj.extractText()).split(',')[2]
-                    numbers = [int(text) for text in text.split() if text.isdigit()]
-                    if len(numbers) > 0 and numbers[0] > 1000:
-                        return numbers[0]
+                    year = int(re.search("\d", text).group())
+                    if year > 1000:
+                        return year
                     else:
                         return -1
 

@@ -48,10 +48,10 @@ class PDF:
                 pageObj = pdfReader.getPage(i)
                 text = str(pageObj.extractText())
                 if 'SECURITIES AND EXCHANGE COMMISSION' in text:
-                    text = str(pageObj.extractText()).split('ORTRANSITION')[0]
+                    text = str(pageObj.extractText()).split(',')[2]
                     numbers = [int(text) for text in text.split() if text.isdigit()]
-                    if len(numbers) > 0 and numbers[len(numbers)-1] > 1000:
-                        return numbers[len(numbers)-1]
+                    if len(numbers) > 0 and numbers[0] > 1000:
+                        return numbers[0]
                     else:
                         return -1
 
@@ -101,9 +101,9 @@ def get_report():
     """
     urls = []
     names = []
-    _TICKER = "GOOGL"
-    _DOMAIN = "https://abc.xyz"
-    _URL = _DOMAIN + "/investor"
+    _TICKER = "DIS"
+    _DOMAIN = "https://www.thewaltdisneycompany.com/investor-relations/"
+    _URL = _DOMAIN #+ "/investor"
     response = simple_get(_URL)
     start = time.time()
 
@@ -117,7 +117,7 @@ def get_report():
                 if not str(_FULLURL).startswith('http'):
                     _FULLURL = _DOMAIN + _FULLURL
                 urls.append(_FULLURL)
-                name = response.select('a')[i].attrs['href'].replace('/', '_') #.split('.com')[1]
+                name = response.select('a')[i].attrs['href'].replace('/', '_').split('.com')[1]
                 if not name.endswith('.pdf'):
                     name = name + '.pdf'
                 names.append(name)

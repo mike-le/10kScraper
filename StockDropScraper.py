@@ -3,7 +3,7 @@ from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
 from urllib import request, error
-from PyPDF2 import utils, PdfFileWriter, PdfFileReader
+from PyPDF2 import utils, PdfFileReader
 import urllib
 import os
 import io
@@ -59,16 +59,6 @@ class PDF:
             log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
             return None
 
-    def save(self, path):
-        pdfReader = PdfFileReader(io.BytesIO(self.source))
-        pdfWriter = PdfFileWriter()
-        if pdfReader.isEncrypted:
-                pdfReader = PDF.decrypt(self, pdfReader, self.name)
-        if pdfReader is not None:
-            newFile = open(path + self.name, 'wb')
-            pdfWriter.write(newFile)
-            newFile.close()
-
     def decrypt(self, pdfReader, name):
             try:
                 pdfReader.decrypt('')
@@ -111,9 +101,9 @@ def get_report():
     """
     urls = []
     names = []
-    _TICKER = "DIS"
-    _DOMAIN = "https://www.thewaltdisneycompany.com/investor-relations/"
-    _URL = _DOMAIN #+ "investor"
+    _TICKER = "GOOGL"
+    _DOMAIN = "https://abc.xyz"
+    _URL = _DOMAIN + "/investor"
     response = simple_get(_URL)
     start = time.time()
 
@@ -127,7 +117,7 @@ def get_report():
                 if not str(_FULLURL).startswith('http'):
                     _FULLURL = _DOMAIN + _FULLURL
                 urls.append(_FULLURL)
-                name = response.select('a')[i].attrs['href'].replace('/', '_').split('.com')[1]
+                name = response.select('a')[i].attrs['href'].replace('/', '_') #.split('.com')[1]
                 if not name.endswith('.pdf'):
                     name = name + '.pdf'
                 names.append(name)
@@ -141,18 +131,17 @@ def get_report():
         for name, url in names_urls:
             try:
                 rq = urllib.request.urlopen(url)
+                pdf = rq.read()
                 header = rq.info()
                 if 'Content-Disposition' in str(header) or 'application/pdf' in str(header):
-                    pdf = PDF(rq.read(), name)
-                    if PDF.is_10K(pdf):
-                        year = str(PDF.get_year(pdf) if PDF.get_year(pdf) > 0 else 'etc')
+                    pdfObj = PDF(pdf, name)
+                    if PDF.is_10K(pdfObj):
+                        year = str(pdfObj.get_year() if pdfObj.get_year() > 0 else 'etc')
                         path = TARGET_PATH + '/' + year + '/'
                         create_directory(path)
-                        pdf.save(path)
-                        numberOfFiles += 1
-                        #with open(TARGET_PATH+'/'+year+'/'+name, 'wb') as f:
-                         #   f.write(rq.read())
-                          #  numberOfFiles += 1
+                        with open(path+name, 'wb') as f:
+                            f.write(pdf)
+                            numberOfFiles += 1
             except urllib.error.HTTPError as e:
                 if e.code == 404:
                     log_error('File not found during requests to {0} : {1}'.format(_URL, str(e)))

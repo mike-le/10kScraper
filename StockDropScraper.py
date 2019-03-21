@@ -16,16 +16,16 @@ class PDF:
     def __init__(self, source, name):
         self.source = source
         self.name = name
+        self.pdfReader = PdfFileReader(io.BytesIO(self.source))
 
     def is_10K(self):
         try:
-            pdfReader = PdfFileReader(io.BytesIO(self.source))
-            if pdfReader.isEncrypted:
-                pdfReader = PDF.decrypt(self, pdfReader, self.name)
-            if pdfReader is None:
+            if self.pdfReader.isEncrypted:
+                self.decrypt()
+            if self.pdfReader is None:
                 return False
-            for i in range(0, pdfReader.getNumPages()):
-                pageObj = pdfReader.getPage(i)
+            for i in range(0, self.pdfReader.getNumPages()):
+                pageObj = self.pdfReader.getPage(i)
                 text = str(pageObj.extractText())
                 if 'SECURITIES AND EXCHANGE COMMISSION' in text:
                     if '10-K' in text:
@@ -39,13 +39,12 @@ class PDF:
 
     def get_year(self):
         try:
-            pdfReader = PdfFileReader(io.BytesIO(self.source))
-            if pdfReader.isEncrypted:
-                pdfReader = PDF.decrypt(self, pdfReader, self.name)
-            if pdfReader is None:
+            if self.pdfReader.isEncrypted:
+                self.decrypt()
+            if self.pdfReader is None:
                 return -1
-            for i in range(0, pdfReader.getNumPages()):
-                pageObj = pdfReader.getPage(i)
+            for i in range(0, self.pdfReader.getNumPages()):
+                pageObj = self.pdfReader.getPage(i)
                 text = str(pageObj.extractText())
                 if 'SECURITIES AND EXCHANGE COMMISSION' in text:
                     text = str(pageObj.extractText()).split(',')[2].lstrip()
@@ -59,18 +58,18 @@ class PDF:
             log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
             return None
 
-    def decrypt(self, pdfReader, name):
+    def decrypt(self):
             try:
-                pdfReader.decrypt('')
+                self.pdfReader.decrypt('')
                 print('File Decrypted (PyPDF2)')
             except NotImplementedError as e:
-                command = ("cp " + name +
-                           " temp.pdf; qpdf --password='' --decrypt temp.pdf " + name
+                command = ("cp " + self.name +
+                           " temp.pdf; qpdf --password='' --decrypt temp.pdf " + self.name
                            + "; rm temp.pdf")
                 os.system(command)
                 print('File Decrypted (qpdf)')
                 try:
-                    fp = open(name)
+                    fp = open(self.name)
                     return PdfFileReader(fp)
                 except FileNotFoundError as e:
                     log_error('Error while reading from file {0}: {1}'.format(self.name, str(e)))

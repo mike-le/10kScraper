@@ -7,7 +7,6 @@ from PyPDF2 import utils, PdfFileReader
 import urllib
 import os
 import io
-import re
 import time
 
 _DIRECTORY = "pdfs/"
@@ -49,8 +48,8 @@ class PDF:
                 pageObj = pdfReader.getPage(i)
                 text = str(pageObj.extractText())
                 if 'SECURITIES AND EXCHANGE COMMISSION' in text:
-                    text = str(pageObj.extractText()).split(',')[2]
-                    year = int(re.search("\d", text).group())
+                    text = str(pageObj.extractText()).split(',')[2].lstrip()
+                    year = int(text[:4])
                     if year > 1000:
                         return year
                     else:

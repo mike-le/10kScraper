@@ -9,7 +9,7 @@ import os
 import io
 import time
 
-_DIRECTORY = "pdfs/"
+_DIRECTORY = "../../target/generated-resources/"
 
 
 class PDF:
@@ -135,7 +135,8 @@ def get_report():
                 if 'Content-Disposition' in str(header) or 'application/pdf' in str(header):
                     pdfObj = PDF(pdf, name)
                     if PDF.is_10K(pdfObj):
-                        year = str(pdfObj.get_year() if pdfObj.get_year() > 0 else 'etc')
+                        pdfYear = pdfObj.get_year()
+                        year = str(pdfYear) if pdfYear > 0 else 'etc'
                         path = TARGET_PATH + '/' + year + '/'
                         create_directory(path)
                         with open(path+name, 'wb') as f:

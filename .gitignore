@@ -2,5 +2,6 @@
 
 # compiled output
 /.idea
-/pdfs
 /venv
+/target/generated-resources
+

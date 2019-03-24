@@ -131,10 +131,10 @@ def get_report():
             try:
                 rq = urllib.request.urlopen(url)
                 pdf = rq.read()
-                header = rq.info()
-                if 'Content-Disposition' in str(header) or 'application/pdf' in str(header):
+                header = str(rq.info())
+                if 'Content-Disposition' in header or 'application/pdf' in header:
                     pdfObj = PDF(pdf, name)
-                    if PDF.is_10K(pdfObj):
+                    if pdfObj.is_10K:
                         pdfYear = pdfObj.get_year()
                         year = str(pdfYear) if pdfYear > 0 else 'etc'
                         path = TARGET_PATH + '/' + year + '/'
@@ -172,7 +172,8 @@ def log_error(e):
     print(e)
 
 
-get_report()
+if __name__ == '__main__':
+    get_report()
 
 
 

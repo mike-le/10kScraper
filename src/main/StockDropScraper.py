@@ -67,12 +67,12 @@ class PDF:
                            " temp.pdf; qpdf --password='' --decrypt temp.pdf " + self.name
                            + "; rm temp.pdf")
                 os.system(command)
-                print('File Decrypted (qpdf)')
                 try:
                     fp = open(self.name)
+                    print('File Decrypted (qpdf)')
                     return PdfFileReader(fp)
                 except FileNotFoundError as e:
-                    log_error('Error while reading from file {0}: {1}'.format(self.name, str(e)))
+                    log_error('Error while reading from encrypted file {0}: {1}'.format(self.name, str(e)))
                     return None
 
 

@@ -8,6 +8,7 @@ import urllib
 import os
 import io
 import time
+import json
 
 _DIRECTORY = "../../target/generated-resources/"
 
@@ -94,15 +95,15 @@ def simple_get(url):
         return None
 
 
-def get_report():
+def get_report(company):
     """
     Downloads the PDFs from the given url
     """
     urls = []
     names = []
-    _TICKER = "DIS"
-    _DOMAIN = "https://www.thewaltdisneycompany.com/investor-relations/"
-    _URL = _DOMAIN #+ "/investor"
+    _TICKER = company["Ticker"]
+    _DOMAIN = company["Domain"]
+    _URL = company["URL"]
     response = simple_get(_URL)
     start = time.time()
 
@@ -136,7 +137,7 @@ def get_report():
                     pdfObj = PDF(pdf, name)
                     if pdfObj.is_10K:
                         pdfYear = pdfObj.get_year()
-                        year = str(pdfYear) if pdfYear > 0 else 'etc'
+                        year = str(pdfYear) if (pdfYear is not None) and (pdfYear > 0) else 'etc'
                         path = TARGET_PATH + '/' + year + '/'
                         create_directory(path)
                         with open(path+name, 'wb') as f:
@@ -173,7 +174,13 @@ def log_error(e):
 
 
 if __name__ == '__main__':
-    get_report()
+    try:
+        with open("../tests/test-resources/testData.json", 'r') as f:
+            datastore = json.load(f)
+        for index, company in enumerate(datastore):
+            get_report(company)
+    except FileNotFoundError as e:
+        log_error('JSON file not found: {0}'.format(str(e)))
 
 
 

@@ -28,7 +28,7 @@ class PDF:
             for i in range(0, self.pdfReader.getNumPages()):
                 pageObj = self.pdfReader.getPage(i)
                 text = str(pageObj.extractText())
-                if 'SECURITIES AND EXCHANGE COMMISSION' in text:
+                if 'SECURITIES AND EXCHANGE COMMISSION' and 'Washington, D.C. 20549' in text:
                     if '10-K' in text:
                         return True
                     else:
@@ -49,9 +49,8 @@ class PDF:
                 text = str(pageObj.extractText())
                 if 'SECURITIES AND EXCHANGE COMMISSION' in text:
                     text = str(pageObj.extractText()).split(',')[2].lstrip(' ')
-                    print(text)
-                    year = int(float(text[:4]))
-                    if year > 1000:
+                    if is_number(text[:4]):
+                        year = int(float(text[:4]))
                         return year
                     else:
                         return -1
@@ -76,6 +75,14 @@ class PDF:
                 except FileNotFoundError as e:
                     log_error('Error while reading from encrypted file {0}: {1}'.format(self.name, str(e)))
                     return None
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 
 def simple_get(url):

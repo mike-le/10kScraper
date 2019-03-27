@@ -48,8 +48,9 @@ class PDF:
                 pageObj = self.pdfReader.getPage(i)
                 text = str(pageObj.extractText())
                 if 'SECURITIES AND EXCHANGE COMMISSION' in text:
-                    text = str(pageObj.extractText()).split(',')[2].lstrip()
-                    year = int(text[:4])
+                    text = str(pageObj.extractText()).split(',')[2].lstrip(' ')
+                    print(text)
+                    year = int(float(text[:4]))
                     if year > 1000:
                         return year
                     else:
@@ -117,7 +118,9 @@ def get_report(company):
                 if not str(_FULLURL).startswith('http'):
                     _FULLURL = _DOMAIN + _FULLURL
                 urls.append(_FULLURL)
-                name = response.select('a')[i].attrs['href'].replace('/', '_').split('.com')[1]
+                name = response.select('a')[i].attrs['href'].replace('/', '_')
+                if '.com' in name:
+                    name = name.split('.com')[1]
                 if not name.endswith('.pdf'):
                     name = name + '.pdf'
                 names.append(name)
@@ -127,6 +130,7 @@ def get_report(company):
         TARGET_PATH = _DIRECTORY + _TICKER
         create_directory(TARGET_PATH)
 
+        #numberOfUrls = len(list(names_urls))
         numberOfFiles = 0
         for name, url in names_urls:
             try:
@@ -149,8 +153,9 @@ def get_report(company):
                 else:
                     raise
         end = time.time()
+        print(str(_TICKER))
         print('Execution Time: ' + str(round(end - start, 2)) + ' seconds')
-        print('Number of files copied over: ' + str(numberOfFiles))
+        print('Number of files copied over: ' + str(numberOfFiles) + " out of ")
     else:
         # Raise an exception if we failed to get any data from the url
         log_error('error found for {}'.format(response))

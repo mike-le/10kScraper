@@ -9,3 +9,7 @@ class commonutils:
             return True
         except ValueError:
             return False
+
+    @staticmethod
+    def log_error(e):
+        print(e)

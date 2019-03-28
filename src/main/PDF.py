@@ -9,6 +9,7 @@ class PDF:
         self.source = source
         self.name = name
         self.pdfReader = PdfFileReader(io.BytesIO(self.source))
+        self.pageNum = -1
 
     def is_10K(self):
         try:
@@ -21,13 +22,14 @@ class PDF:
                 text = str(pageObj.extractText())
                 if 'SECURITIES AND EXCHANGE COMMISSION' and 'Washington, D.C. 20549' in text:
                     if '10-K' in text:
+                        self.pageNum = i
                         return True
                     else:
                         return False
 
         except utils.PdfReadError as e:
             self.log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
-            return None
+            return False
 
     def get_year(self):
         try:
@@ -36,6 +38,8 @@ class PDF:
             if self.pdfReader is None:
                 return -1
             for i in range(0, self.pdfReader.getNumPages()):
+                if self.pageNum != -1:
+                    i = self.pageNum
                 pageObj = self.pdfReader.getPage(i)
                 text = str(pageObj.extractText())
                 if 'SECURITIES AND EXCHANGE COMMISSION' and 'Washington, D.C. 20549' in text:
@@ -48,7 +52,7 @@ class PDF:
 
         except utils.PdfReadError as e:
             self.log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
-            return None
+            return -1
 
     def decrypt(self):
             try:

@@ -3,79 +3,13 @@ from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
 from urllib import request, error
-from PyPDF2 import utils, PdfFileReader
-from commonutils import commonutils
+from PDF import PDF
 import urllib
 import os
-import io
 import time
 import json
 
 _DIRECTORY = "../../target/generated-resources/"
-
-
-class PDF:
-    def __init__(self, source, name):
-        self.source = source
-        self.name = name
-        self.pdfReader = PdfFileReader(io.BytesIO(self.source))
-
-    def is_10K(self):
-        try:
-            if self.pdfReader.isEncrypted:
-                self.decrypt()
-            if self.pdfReader is None:
-                return False
-            for i in range(0, self.pdfReader.getNumPages()):
-                pageObj = self.pdfReader.getPage(i)
-                text = str(pageObj.extractText())
-                if 'SECURITIES AND EXCHANGE COMMISSION' and 'Washington, D.C. 20549' in text:
-                    if '10-K' in text:
-                        return True
-                    else:
-                        return False
-
-        except utils.PdfReadError as e:
-            log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
-            return None
-
-    def get_year(self):
-        try:
-            if self.pdfReader.isEncrypted:
-                self.decrypt()
-            if self.pdfReader is None:
-                return -1
-            for i in range(0, self.pdfReader.getNumPages()):
-                pageObj = self.pdfReader.getPage(i)
-                text = str(pageObj.extractText())
-                if 'SECURITIES AND EXCHANGE COMMISSION' and 'Washington, D.C. 20549' in text:
-                    text = str(pageObj.extractText()).split(',')[2].lstrip(' ')
-                    if commonutils.is_number(text[:4]):
-                        year = int(float(text[:4]))
-                        return year
-                    else:
-                        return -1
-
-        except utils.PdfReadError as e:
-            log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
-            return None
-
-    def decrypt(self):
-            try:
-                self.pdfReader.decrypt('')
-                print('File Decrypted (PyPDF2)')
-            except NotImplementedError as e:
-                command = ("cp " + self.name +
-                           " temp.pdf; qpdf --password='' --decrypt temp.pdf " + self.name
-                           + "; rm temp.pdf")
-                os.system(command)
-                try:
-                    fp = open(self.name)
-                    print('File Decrypted (qpdf)')
-                    return PdfFileReader(fp)
-                except FileNotFoundError as e:
-                    log_error('Error while reading from encrypted file {0}: {1}'.format(self.name, str(e)))
-                    return None
 
 
 def simple_get(url):
@@ -148,7 +82,7 @@ def get_report(company):
                         with open(path+name, 'wb') as f:
                             f.write(pdf)
                             numberOfFiles += 1
-            except urllib.error.HTTPError as e:
+            except error.HTTPError as e:
                 if e.code == 404:
                     log_error('File not found during requests to {0} : {1}'.format(_URL, str(e)))
                 else:

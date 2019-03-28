@@ -4,6 +4,7 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 from urllib import request, error
 from PyPDF2 import utils, PdfFileReader
+from commonutils import commonutils
 import urllib
 import os
 import io
@@ -47,9 +48,9 @@ class PDF:
             for i in range(0, self.pdfReader.getNumPages()):
                 pageObj = self.pdfReader.getPage(i)
                 text = str(pageObj.extractText())
-                if 'SECURITIES AND EXCHANGE COMMISSION' in text:
+                if 'SECURITIES AND EXCHANGE COMMISSION' and 'Washington, D.C. 20549' in text:
                     text = str(pageObj.extractText()).split(',')[2].lstrip(' ')
-                    if is_number(text[:4]):
+                    if commonutils.is_number(text[:4]):
                         year = int(float(text[:4]))
                         return year
                     else:
@@ -75,14 +76,6 @@ class PDF:
                 except FileNotFoundError as e:
                     log_error('Error while reading from encrypted file {0}: {1}'.format(self.name, str(e)))
                     return None
-
-
-def is_number(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
 
 
 def simple_get(url):
@@ -114,6 +107,8 @@ def get_report(company):
     _URL = company["URL"]
     response = simple_get(_URL)
     start = time.time()
+    numberOfUrls = 0
+    numberOfFiles = 0
 
     if response is not None:
         response = BeautifulSoup(response, 'html.parser')
@@ -131,14 +126,13 @@ def get_report(company):
                 if not name.endswith('.pdf'):
                     name = name + '.pdf'
                 names.append(name)
+                numberOfUrls += 1
         names_urls = zip(names, urls)
 
         # Create target folder if it does not exist
         TARGET_PATH = _DIRECTORY + _TICKER
         create_directory(TARGET_PATH)
 
-        #numberOfUrls = len(list(names_urls))
-        numberOfFiles = 0
         for name, url in names_urls:
             try:
                 rq = urllib.request.urlopen(url)
@@ -162,7 +156,7 @@ def get_report(company):
         end = time.time()
         print(str(_TICKER))
         print('Execution Time: ' + str(round(end - start, 2)) + ' seconds')
-        print('Number of files copied over: ' + str(numberOfFiles) + " out of ")
+        print('Number of files copied over: ' + str(numberOfFiles) + " out of " + str(numberOfUrls))
     else:
         # Raise an exception if we failed to get any data from the url
         log_error('error found for {}'.format(response))

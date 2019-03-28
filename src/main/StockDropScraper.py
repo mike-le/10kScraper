@@ -75,6 +75,7 @@ def get_report(company):
                 if 'Content-Disposition' in header or 'application/pdf' in header:
                     pdfObj = PDF(pdf, name)
                     if pdfObj.is_10K:
+                        print(str(numberOfFiles))
                         pdfYear = pdfObj.get_year()
                         year = str(pdfYear) if (pdfYear is not None) and (pdfYear > 0) else 'etc'
                         path = TARGET_PATH + '/' + year + '/'

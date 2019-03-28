@@ -15,8 +15,6 @@ class PDF:
         try:
             if self.pdfReader.isEncrypted:
                 self.decrypt()
-            if self.pdfReader is None:
-                return False
             for i in range(0, self.pdfReader.getNumPages()):
                 pageObj = self.pdfReader.getPage(i)
                 text = str(pageObj.extractText())
@@ -26,7 +24,7 @@ class PDF:
                         return True
                     else:
                         return False
-
+            return False
         except utils.PdfReadError as e:
             self.log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
             return False
@@ -35,8 +33,6 @@ class PDF:
         try:
             if self.pdfReader.isEncrypted:
                 self.decrypt()
-            if self.pdfReader is None:
-                return -1
             for i in range(0, self.pdfReader.getNumPages()):
                 if self.pageNum != -1:
                     i = self.pageNum
@@ -49,7 +45,7 @@ class PDF:
                         return year
                     else:
                         return -1
-
+            return -1
         except utils.PdfReadError as e:
             self.log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
             return -1
@@ -66,10 +62,10 @@ class PDF:
                 try:
                     fp = open(self.name)
                     print('File Decrypted (qpdf)')
-                    return PdfFileReader(fp)
+                    self.pdfReader = PdfFileReader(fp)
                 except FileNotFoundError as e:
                     self.log_error('Error while reading from encrypted file {0}: {1}'.format(self.name, str(e)))
-                    return None
+                    return False
 
     def log_error(self, e):
         print(e)

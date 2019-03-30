@@ -114,7 +114,7 @@ def create_directory(dir):
 
 if __name__ == '__main__':
     logging.basicConfig(filename=LOG_DIRECTORY+'scraperlog.log', filemode='w', level=logging.DEBUG)
-    logging.info('Started')
+    logging.info('Initiated scraping...')
     try:
         with open("../tests/test-resources/testData.json", 'r') as f:
             datastore = json.load(f)

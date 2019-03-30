@@ -10,7 +10,8 @@ import os
 import time
 import json
 
-_DIRECTORY = "../../target/generated-resources/"
+PDF_DIRECTORY = "../../target/generated-resources/"
+LOG_DIRECTORY = "../../target/logs/"
 
 
 def simple_get(url):
@@ -65,7 +66,7 @@ def get_report(company):
         names_urls = zip(names, urls)
 
         # Create target folder if it does not exist
-        TARGET_PATH = _DIRECTORY + _TICKER
+        TARGET_PATH = PDF_DIRECTORY + _TICKER
         create_directory(TARGET_PATH)
 
         for name, url in names_urls:
@@ -112,7 +113,7 @@ def create_directory(dir):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='scraperlog.log', filemode='w', level=logging.DEBUG)
+    logging.basicConfig(filename=LOG_DIRECTORY+'scraperlog.log', filemode='w', level=logging.DEBUG)
     logging.info('Started')
     try:
         with open("../tests/test-resources/testData.json", 'r') as f:

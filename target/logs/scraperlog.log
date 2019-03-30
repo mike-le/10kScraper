@@ -1,0 +1,13 @@
+INFO:root:Started
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): abc.xyz:443
+DEBUG:urllib3.connectionpool:https://abc.xyz:443 "GET /investor HTTP/1.1" 301 222
+DEBUG:urllib3.connectionpool:https://abc.xyz:443 "GET /investor/ HTTP/1.1" 200 None
+INFO:root:GOOGL
+INFO:root:Execution Time: 56.44 seconds
+INFO:root:Number of files copied over: 3 out of 27
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): ir.aboutamazon.com:443
+DEBUG:urllib3.connectionpool:https://ir.aboutamazon.com:443 "GET /sec-filings?field_nir_sec_form_group_target_id%5B%5D=471&field_nir_sec_date_filed_value=&items_per_page=10 HTTP/1.1" 200 18668
+INFO:root:AMZN
+INFO:root:Execution Time: 4.41 seconds
+INFO:root:Number of files copied over: 0 out of 7
+INFO:root:Finished

@@ -1,5 +1,6 @@
 from PyPDF2 import utils, PdfFileReader
 from commonutils import commonutils
+import logging
 import io
 import os
 
@@ -26,7 +27,7 @@ class PDF:
                         return False
             return False
         except utils.PdfReadError as e:
-            self.log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
+            logging.debug('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
             return False
 
     def get_year(self):
@@ -47,13 +48,13 @@ class PDF:
                         return -1
             return -1
         except utils.PdfReadError as e:
-            self.log_error('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
+            logging.debug('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
             return -1
 
     def decrypt(self):
             try:
                 self.pdfReader.decrypt('')
-                print('File Decrypted (PyPDF2)')
+                logging.info('File Decrypted (PyPDF2)')
             except NotImplementedError as e:
                 command = ("cp " + self.name +
                            " temp.pdf; qpdf --password='' --decrypt temp.pdf " + self.name
@@ -61,12 +62,9 @@ class PDF:
                 os.system(command)
                 try:
                     fp = open(self.name)
-                    print('File Decrypted (qpdf)')
+                    logging.info('File Decrypted (qpdf)')
                     self.pdfReader = PdfFileReader(fp)
                 except FileNotFoundError as e:
-                    self.log_error('Error while reading from encrypted file {0}: {1}'.format(self.name, str(e)))
+                    logging.debug('Error while reading from encrypted file {0}: {1}'.format(self.name, str(e)))
                     return False
-
-    def log_error(self, e):
-        print(e)
 

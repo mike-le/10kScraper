@@ -4,6 +4,7 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 from urllib import request, error
 from PDF import PDF
+import logging
 import urllib
 import os
 import time
@@ -26,7 +27,7 @@ def simple_get(url):
                 return None
 
     except RequestException as e:
-        log_error('Error during requests to {0} : {1}'.format(url, str(e)))
+        logging.debug('Error during requests to {0} : {1}'.format(url, str(e)))
         return None
 
 
@@ -84,16 +85,16 @@ def get_report(company):
                             numberOfFiles += 1
             except error.HTTPError as e:
                 if e.code == 404:
-                    log_error('File not found during requests to {0} : {1}'.format(_URL, str(e)))
+                    logging.debug('File not found during requests to {0} : {1}'.format(_URL, str(e)))
                 else:
                     raise
         end = time.time()
-        print(str(_TICKER))
-        print('Execution Time: ' + str(round(end - start, 2)) + ' seconds')
-        print('Number of files copied over: ' + str(numberOfFiles) + " out of " + str(numberOfUrls))
+        logging.info(str(_TICKER))
+        logging.info('Execution Time: ' + str(round(end - start, 2)) + ' seconds')
+        logging.info('Number of files copied over: ' + str(numberOfFiles) + " out of " + str(numberOfUrls))
     else:
         # Raise an exception if we failed to get any data from the url
-        log_error('error found for {}'.format(response))
+        logging.debug('Error found for {}'.format(response))
         raise Exception('Error retrieving contents at {}'.format(_URL))
 
 
@@ -107,20 +108,21 @@ def is_good_response(resp):
 def create_directory(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
-
-
-def log_error(e):
-    print(e)
+        logging.info('Directory created at: ' + str(dir))
 
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='scraperlog.log', filemode='w', level=logging.DEBUG)
+    logging.info('Started')
     try:
         with open("../tests/test-resources/testData.json", 'r') as f:
             datastore = json.load(f)
         for index, company in enumerate(datastore):
             get_report(company)
     except FileNotFoundError as e:
-        log_error('JSON file not found: {0}'.format(str(e)))
+        logging.debug('JSON file not found: {0}'.format(str(e)))
+    finally:
+        logging.info('Finished')
 
 
 

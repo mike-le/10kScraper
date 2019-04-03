@@ -10,16 +10,16 @@ import os
 import time
 import json
 
-PDF_DIRECTORY = "../../target/generated-resources/"
-LOG_DIRECTORY = "../../target/logs/"
+PDF_DIRECTORY = ""
+LOG_DIRECTORY = ""
+TEST_DIRECTORY = ""
 
-
+"""
+Attempts to get the content at `url` by making an HTTP GET request.
+If the content-type of response is some kind of HTML/XML, return the
+text content, otherwise return None.
+"""
 def simple_get(url):
-    """
-    Attempts to get the content at `url` by making an HTTP GET request.
-    If the content-type of response is some kind of HTML/XML, return the
-    text content, otherwise return None.
-    """
     try:
         with closing(get(url, stream=True)) as resp:
             if is_good_response(resp):
@@ -31,11 +31,10 @@ def simple_get(url):
         logging.debug('Error during requests to {0} : {1}'.format(url, str(e)))
         return None
 
-
+"""
+Downloads the PDFs from the given url
+"""
 def get_report(company):
-    """
-    Downloads the PDFs from the given url
-    """
     urls = []
     names = []
     _TICKER = company["Ticker"]
@@ -90,7 +89,7 @@ def get_report(company):
                 else:
                     raise
         end = time.time()
-        logging.info(str(_TICKER))
+        logging.info('Ticker: ' + str(_TICKER))
         logging.info('Execution Time: ' + str(round(end - start, 2)) + ' seconds')
         logging.info('Number of files copied over: ' + str(numberOfFiles) + " out of " + str(numberOfUrls))
     else:
@@ -113,10 +112,16 @@ def create_directory(dir):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename=LOG_DIRECTORY+'scraperlog.log', filemode='w', level=logging.DEBUG)
-    logging.info('Initiated scraping...')
+    
     try:
-        with open("../tests/test-resources/testData.json", 'r') as f:
+        with open('../../config.json') as configJSON:
+            config = json.load(configJSON)
+            LOG_DIRECTORY = config["directory"]["log"]
+            PDF_DiRECTORY = config["directory"]["target"]
+            TEST_DIRECTORY = config["directory"]["testsource"]
+        logging.basicConfig(filename=LOG_DIRECTORY+'scraperlog.log', filemode='w', level=logging.DEBUG)
+        logging.info('Initiated scraping...')
+        with open(TEST_DIRECTORY+'testData.json', 'r') as f:
             datastore = json.load(f)
         for index, company in enumerate(datastore):
             get_report(company)

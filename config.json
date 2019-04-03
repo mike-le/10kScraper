@@ -1,0 +1,7 @@
+{
+    "directory":{
+        "target":"../../target/generated-resources/",
+        "log":"../../target/logs/",
+        "testsource":"../tests/test-resources/"
+    }
+}

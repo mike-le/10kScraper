@@ -126,7 +126,7 @@ if __name__ == '__main__':
         with open('../../config.json') as configJSON:
             config = json.load(configJSON)
             LOG_DIRECTORY = config["directory"]["log"]
-            PDF_DiRECTORY = config["directory"]["target"]
+            PDF_DIRECTORY = config["directory"]["target"]
             TEST_DIRECTORY = config["directory"]["testsource"]
         logging.basicConfig(filename=LOG_DIRECTORY+'scraperlog.log', filemode='w', level=logging.DEBUG)
         logging.info('Initiated scraping...')

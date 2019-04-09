@@ -31,12 +31,11 @@ def simple_get(url):
         logging.debug('Error during requests to {0} : {1}'.format(url, str(e)))
         return None
 
+
 """
 Downloads the PDFs from the given url
 """
 def get_report(company):
-    urls = []
-    names = []
     _TICKER = company["Ticker"]
     _DOMAIN = company["Domain"]
     _URL = company["URL"]
@@ -45,16 +44,56 @@ def get_report(company):
     numberOfUrls = 0
     numberOfFiles = 0
 
+    # Create dictionary of file names and links to all PDFs from response object
+    names_urls = scrape_pdf_links(_URL, _DOMAIN, response, numberOfUrls)
+
+    # Create target folder if it does not exist
+    TARGET_PATH = PDF_DIRECTORY + _TICKER
+    create_directory(TARGET_PATH)
+
+    # Validate PDF and save to target directory
+    for name, url in names_urls:
+        try:
+            rq = urllib.request.urlopen(url)
+            pdf = rq.read()
+            header = str(rq.info())
+            if 'Content-Disposition' in header or 'application/pdf' in header:
+                pdfObj = PDF(pdf, name)
+                if PDF.is_10K(pdfObj):
+                    pdfYear = PDF.get_year(pdfObj)
+                    year = str(pdfYear) if (pdfYear is not None) and (pdfYear > 0) else 'etc'
+                    path = TARGET_PATH + '/' + year + '/'
+                    create_directory(path)
+                    with open(path+name, 'wb') as f:
+                        f.write(pdf)
+                        numberOfFiles += 1
+        except error.HTTPError as e:
+            if e.code == 404:
+                logging.debug('File not found during requests to {0} : {1}'.format(_URL, str(e)))
+            else:
+                raise
+    end = time.time()
+    logging.info('Ticker: ' + str(_TICKER))
+    logging.info('Execution Time: ' + str(round(end - start, 2)) + ' seconds')
+    logging.info('Number of files copied over: ' + str(numberOfFiles) + " out of " + str(numberOfUrls))
+
+
+"""
+Search for href links in a HTTP response object and scrape PDFs
+"""
+def scrape_pdf_links(url, domain, response, numberOfUrls):
+    urls = []
+    names = []
+
     if response is not None:
         response = BeautifulSoup(response, 'html.parser')
-
         for i, link in enumerate(response.findAll('a')):
-            _FULLURL = str(link.get('href'))
-            _TYPE = str(link.get('type'))
-            if 'pdf' in _TYPE or '.pdf' in _FULLURL:
-                if not str(_FULLURL).startswith('http'):
-                    _FULLURL = _DOMAIN + _FULLURL
-                urls.append(_FULLURL)
+            fullUrl = str(link.get('href'))
+            linkType = str(link.get('type'))
+            if 'pdf' in linkType or '.pdf' in fullUrl:
+                if not str(fullUrl).startswith('http'):
+                    fullUrl = domain + fullUrl
+                urls.append(fullUrl)
                 name = response.select('a')[i].attrs['href'].replace('/', '_')
                 if '.com' in name:
                     name = name.split('.com')[1]
@@ -62,40 +101,11 @@ def get_report(company):
                     name = name + '.pdf'
                 names.append(name)
                 numberOfUrls += 1
-        names_urls = zip(names, urls)
-
-        # Create target folder if it does not exist
-        TARGET_PATH = PDF_DIRECTORY + _TICKER
-        create_directory(TARGET_PATH)
-
-        for name, url in names_urls:
-            try:
-                rq = urllib.request.urlopen(url)
-                pdf = rq.read()
-                header = str(rq.info())
-                if 'Content-Disposition' in header or 'application/pdf' in header:
-                    pdfObj = PDF(pdf, name)
-                    if PDF.is_10K(pdfObj):
-                        pdfYear = PDF.get_year(pdfObj)
-                        year = str(pdfYear) if (pdfYear is not None) and (pdfYear > 0) else 'etc'
-                        path = TARGET_PATH + '/' + year + '/'
-                        create_directory(path)
-                        with open(path+name, 'wb') as f:
-                            f.write(pdf)
-                            numberOfFiles += 1
-            except error.HTTPError as e:
-                if e.code == 404:
-                    logging.debug('File not found during requests to {0} : {1}'.format(_URL, str(e)))
-                else:
-                    raise
-        end = time.time()
-        logging.info('Ticker: ' + str(_TICKER))
-        logging.info('Execution Time: ' + str(round(end - start, 2)) + ' seconds')
-        logging.info('Number of files copied over: ' + str(numberOfFiles) + " out of " + str(numberOfUrls))
+        return zip(names, urls)
     else:
         # Raise an exception if we failed to get any data from the url
         logging.debug('Error found for {}'.format(response))
-        raise Exception('Error retrieving contents at {}'.format(_URL))
+        raise Exception('Error retrieving contents at {}'.format(url))
 
 
 def is_good_response(resp):
@@ -112,7 +122,6 @@ def create_directory(dir):
 
 
 if __name__ == '__main__':
-    
     try:
         with open('../../config.json') as configJSON:
             config = json.load(configJSON)

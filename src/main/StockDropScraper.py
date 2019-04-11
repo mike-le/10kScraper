@@ -10,9 +10,9 @@ import os
 import time
 import json
 
-PDF_DIRECTORY = ""
-LOG_DIRECTORY = ""
-TEST_DIRECTORY = ""
+PDF_DIRECTORY = None
+LOG_DIRECTORY = None
+TEST_DIRECTORY = None
 
 """
 Attempts to get the content at `url` by making an HTTP GET request.

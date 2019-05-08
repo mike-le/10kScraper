@@ -134,7 +134,8 @@ if __name__ == '__main__':
             LOG_DIRECTORY = config["directory"]["log"]
             PDF_DIRECTORY = config["directory"]["target"]
             TEST_DIRECTORY = config["directory"]["testsource"]
-        logging.basicConfig(filename=LOG_DIRECTORY+'scraperlog.log', filemode='w', level=logging.DEBUG)
+        numberOfFiles = len([name for name in os.listdir(LOG_DIRECTORY)]);
+        logging.basicConfig(filename=LOG_DIRECTORY+'scraperlog.log'+numberOfFiles, filemode='w', level=logging.DEBUG)
         logging.info('Initiated scraping...')
         with open(TEST_DIRECTORY+'testData.json', 'r') as f:
             datastore = json.load(f)

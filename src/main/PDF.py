@@ -1,16 +1,14 @@
 from PyPDF2 import utils, PdfFileReader
 from commonutils import commonutils
 import logging
-import io
 import os
 
 
 class PDF:
     def __init__(self, source, name):
-        self.source = source
-        self.name = name
-        self.pdfReader = PdfFileReader(io.BytesIO(self.source))
-        self.pageNum = -1
+            self.name = name
+            self.pdfReader = source;
+            self.pageNum = -1
 
     def is_10K(self):
         try:

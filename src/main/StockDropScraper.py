@@ -4,6 +4,8 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 from urllib import request, error
 from PDF import PDF
+from PyPDF2 import utils, PdfFileReader
+import io
 import logging
 import urllib
 import os
@@ -58,7 +60,11 @@ def get_report(company):
             pdf = rq.read()
             header = str(rq.info())
             if 'Content-Disposition' in header or 'application/pdf' in header:
-                pdfObj = PDF(pdf, name)
+                try:
+                    pdfReader = PdfFileReader(io.BytesIO(pdf))
+                except utils.PdfReadError as e:
+                    logging.debug('Error while reading from PDF object {0}: {1}'.format(name, str(e)))
+                pdfObj = PDF(pdfReader, name)
                 if PDF.is_10K(pdfObj):
                     pdfYear = PDF.get_year(pdfObj)
                     year = str(pdfYear) if (pdfYear is not None) and (pdfYear > 0) else 'etc'

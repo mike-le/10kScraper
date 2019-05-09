@@ -11,6 +11,7 @@ import urllib
 import os
 import time
 import json
+import sys
 
 PDF_DIRECTORY = None
 LOG_DIRECTORY = None
@@ -82,6 +83,7 @@ def get_report(company):
     logging.info('Ticker: ' + str(_TICKER))
     logging.info('Execution Time: ' + str(round(end - start, 2)) + ' seconds')
     logging.info('Number of files copied over: ' + str(numberOfFiles) + " out of " + str(numberOfUrls))
+    logging.info('\n')
 
 
 """
@@ -135,7 +137,8 @@ if __name__ == '__main__':
             PDF_DIRECTORY = config["directory"]["target"]
             TEST_DIRECTORY = config["directory"]["testsource"]
         numberOfFiles = len([name for name in os.listdir(LOG_DIRECTORY)]);
-        logging.basicConfig(filename=LOG_DIRECTORY+'scraperlog.log'+numberOfFiles, filemode='w', level=logging.DEBUG)
+        logging.basicConfig(filename=LOG_DIRECTORY+'Log_'+str(numberOfFiles)+'.log', filemode='w', level=logging.DEBUG)
+        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
         logging.info('Initiated scraping...')
         with open(TEST_DIRECTORY+'testData.json', 'r') as f:
             datastore = json.load(f)

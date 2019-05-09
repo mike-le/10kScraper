@@ -16,5 +16,12 @@
 	"Ticker": "WMT",
 	"Domain": "https://stock.walmart.com/investors/financial-information/sec-filings/",
 	"URL": "https://stock.walmart.com/investors/financial-information/sec-filings/"
+	},
+	{
+	"Name":  "IBM",
+	"Ticker": "IBM",
+	"Domain": "https://www.ibm.com/investor/",
+	"URL": "https://www.ibm.com/investor/"
 	}
+
 ]

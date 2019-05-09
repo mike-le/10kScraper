@@ -66,3 +66,4 @@ class PDF:
                     logging.debug('Error while reading from encrypted file {0}: {1}'.format(self.name, str(e)))
                     return False
 
+

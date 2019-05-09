@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from urllib import request, error
 from PDF import PDF
 from PyPDF2 import utils, PdfFileReader
+import subprocess
 import io
 import logging
 import urllib
@@ -114,6 +115,24 @@ def scrape_pdf_links(url, domain, response, numberOfUrls):
         # Raise an exception if we failed to get any data from the url
         logging.debug('Error found for {}'.format(response))
         raise Exception('Error retrieving contents at {}'.format(url))
+
+"""
+Handles missing EOF marker error
+"""
+def decompress_pdf(temp_buffer):
+    temp_buffer.seek(0)  # Make sure we're at the start of the file.
+
+    process = subprocess.Popen(['pdftk.exe',
+                                '-',  # Read from stdin.
+                                'output',
+                                '-',  # Write to stdout.
+                                'uncompress'],
+                                stdin=temp_buffer,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+
+    return io.StringIO(stdout)
 
 
 def is_good_response(resp):

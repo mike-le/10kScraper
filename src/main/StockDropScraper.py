@@ -67,8 +67,9 @@ def get_report(company):
                 except utils.PdfReadError as e:
                     logging.debug('Error while reading from PDF object {0}: {1}'.format(name, str(e)))
                 pdfObj = PDF(pdfReader, name)
-                if PDF.is_10K(pdfObj):
-                    pdfYear = PDF.get_year(pdfObj)
+                if pdfObj.is_10K:
+                    logging.debug('Files decrypted: ' + str(pdfObj.get_decryptCount()))
+                    pdfYear = pdfObj.get_year()
                     year = str(pdfYear) if (pdfYear is not None) and (pdfYear > 0) else 'etc'
                     path = TARGET_PATH + '/' + year + '/'
                     create_directory(path)

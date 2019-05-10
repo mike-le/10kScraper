@@ -9,6 +9,7 @@ class PDF:
             self.name = name
             self.pdfReader = source;
             self.pageNum = -1
+            self.decryptCount = 0;
 
     def is_10K(self):
         try:
@@ -49,10 +50,13 @@ class PDF:
             logging.debug('Error while reading from PDF object {0}: {1}'.format(self.name, str(e)))
             return -1
 
+    def get_decryptCount(self):
+        return self.decryptCount
+
     def decrypt(self):
             try:
                 self.pdfReader.decrypt('')
-                logging.info('File Decrypted (PyPDF2)')
+                self.decryptCount += 1
             except NotImplementedError as e:
                 command = ("cp " + self.name +
                            " temp.pdf; qpdf --password='' --decrypt temp.pdf " + self.name
@@ -61,6 +65,7 @@ class PDF:
                 try:
                     fp = open(self.name)
                     logging.info('File Decrypted (qpdf)')
+                    self.decryptCount += 1
                     self.pdfReader = PdfFileReader(fp)
                 except FileNotFoundError as e:
                     logging.debug('Error while reading from encrypted file {0}: {1}'.format(self.name, str(e)))

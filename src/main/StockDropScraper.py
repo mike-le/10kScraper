@@ -14,9 +14,7 @@ import time
 import json
 import sys
 
-PDF_DIRECTORY = None
-LOG_DIRECTORY = None
-TEST_DIRECTORY = None
+PDF_DIRECTORY, LOG_DIRECTORY, TEST_DIRECTORY = None
 
 """
 Attempts to get the content at `url` by making an HTTP GET request.
@@ -30,7 +28,6 @@ def simple_get(url):
                 return resp.content
             else:
                 return None
-
     except RequestException as e:
         logging.debug('Error during requests to {0} : {1}'.format(url, str(e)))
         return None
@@ -45,11 +42,10 @@ def get_report(company):
     _URL = company["URL"]
     response = simple_get(_URL)
     start = time.time()
-    numberOfUrls = 0
-    numberOfFiles = 0
+    urlcount, filecount = 0
 
     # Create dictionary of file names and links to all PDFs from response object
-    names_urls = scrape_pdf_links(_URL, _DOMAIN, response, numberOfUrls)
+    names_urls = scrape_pdf_links(_URL, _DOMAIN, response, urlcount)
 
     # Create target folder if it does not exist
     TARGET_PATH = PDF_DIRECTORY + _TICKER
@@ -62,10 +58,7 @@ def get_report(company):
             pdf = rq.read()
             header = str(rq.info())
             if 'Content-Disposition' in header or 'application/pdf' in header:
-                try:
-                    pdfReader = PdfFileReader(io.BytesIO(pdf))
-                except utils.PdfReadError as e:
-                    logging.debug('Error while reading from PDF object {0}: {1}'.format(name, str(e)))
+                pdfReader = PdfFileReader(io.BytesIO(pdf))
                 pdfObj = PDF(pdfReader, name)
                 if pdfObj.is_10K:
                     logging.debug('Files decrypted: ' + str(pdfObj.get_decryptCount()))
@@ -75,21 +68,22 @@ def get_report(company):
                     create_directory(path)
                     with open(path+name, 'wb') as f:
                         f.write(pdf)
-                        numberOfFiles += 1
-        except error.HTTPError as e:
+                        filecount += 1
+        except (error.HTTPError, utils.PdfReadError) as e:
             if e.code == 404:
                 logging.debug('File not found during requests to {0} : {1}'.format(_URL, str(e)))
             else:
+                logging.debug('Error while reading from PDF object {0}: {1}'.format(name, str(e)))
                 raise
     end = time.time()
     logging.info('Ticker: ' + str(_TICKER))
-    logging.info('Execution Time: ' + str(round(end - start, 2)) + ' seconds')
-    logging.info('Number of files copied over: ' + str(numberOfFiles) + " out of " + str(numberOfUrls))
+    logging.info('Execution Time: ' + str(round(end-start, 2)) + ' seconds')
+    logging.info('Number of files copied over: ' + str(filecount) + " out of " + str(urlcount))
     logging.info('\n')
 
 
 """
-Search for href links in a HTTP response object and scrape PDFs
+Search for href links in a HTTP response object and store PDFs in a dictionary
 """
 def scrape_pdf_links(url, domain, response, numberOfUrls):
     urls = []
@@ -116,6 +110,7 @@ def scrape_pdf_links(url, domain, response, numberOfUrls):
         # Raise an exception if we failed to get any data from the url
         logging.debug('Error found for {}'.format(response))
         raise Exception('Error retrieving contents at {}'.format(url))
+
 
 """
 Handles missing EOF marker error
